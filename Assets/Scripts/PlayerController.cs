@@ -7,14 +7,14 @@ public class PlayerController : MonoBehaviour
 
     InputAction moveAction;
     [SerializeField]
-    PlayerState state;
+    ActionState state;
     [SerializeField]
     float speed = 5f;
     Vector3 targetPosition;
     
     void Start()
     {
-        state = PlayerState.STANDING;
+        state = ActionState.STANDING;
         moveAction = InputSystem.actions.FindAction("Move");
         transform.position = new Vector3(0,0,0);
     }
@@ -22,13 +22,13 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(state.Equals(PlayerState.STANDING) && moveAction.IsPressed())
+        if(state.Equals(ActionState.STANDING) && moveAction.IsPressed())
         {
             var moveValue = GetMoveValue();
             targetPosition = transform.position + this.buildVector(moveValue);
-            state = PlayerState.MOVING;
+            state = ActionState.MOVING;
         }
-        else if(state.Equals(PlayerState.MOVING))
+        else if(state.Equals(ActionState.MOVING))
         {
             moveToTarget();
         }
@@ -57,7 +57,7 @@ public class PlayerController : MonoBehaviour
         transform.position = Vector3.MoveTowards(currentPosition, targetPosition, Time.deltaTime * speed);
         if (currentPosition == targetPosition)
         {
-            state = PlayerState.STANDING;
+            state = ActionState.STANDING;
         }
     }
 

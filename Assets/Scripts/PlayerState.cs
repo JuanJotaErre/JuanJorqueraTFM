@@ -1,7 +1,8 @@
 using UnityEngine;
 
-public enum PlayerState
+public enum ActionState
 {
     STANDING,
-    MOVING
+    MOVING,
+    PAUSE
 }
