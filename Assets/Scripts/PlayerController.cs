@@ -17,6 +17,8 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField]
     Tilemap tilemap;
+
+    bool lastMovementAxisX = false;
     
     void Start()
     {
@@ -52,15 +54,30 @@ public class PlayerController : MonoBehaviour
     private Vector3 GetMoveValue()
     {
         var rawValue = moveAction.ReadValue<Vector2>();
+        
         var x = rawValue.x;
         var y = rawValue.y;
         var vector = new Vector3();
-        if(Math.Abs(x) >= Math.Abs(y))
+        if(Math.Abs(x) == Math.Abs(y))
+        {
+            if(lastMovementAxisX)
+            {
+                vector.y = y;
+                // lastMovementAxisX = false;
+            } else
+            {
+                vector.x = x;
+                // lastMovementAxisX = true;
+            }
+        }
+        else if(Math.Abs(x) > Math.Abs(y))
         {
             vector.x = x;
+            lastMovementAxisX = true;
         } else
         {
             vector.y = y;
+            lastMovementAxisX = false;
         }
         return vector.normalized;
     }
