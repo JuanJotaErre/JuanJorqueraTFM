@@ -1,16 +1,22 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Tilemaps;
 
 public class PlayerController : MonoBehaviour
 {
 
     InputAction moveAction;
+    
     [SerializeField]
     ActionState state;
+
     [SerializeField]
     float speed = 5f;
     Vector3 targetPosition;
+
+    [SerializeField]
+    Tilemap tilemap;
     
     void Start()
     {
@@ -25,13 +31,22 @@ public class PlayerController : MonoBehaviour
         if(state.Equals(ActionState.STANDING) && moveAction.IsPressed())
         {
             var moveValue = GetMoveValue();
-            targetPosition = transform.position + this.buildVector(moveValue);
-            state = ActionState.MOVING;
+            var nextPosition = transform.position + this.buildVector(moveValue);
+            if(CheckPositionIsFree(nextPosition))
+            {
+                targetPosition = nextPosition;
+                state = ActionState.MOVING;
+            }
         }
         else if(state.Equals(ActionState.MOVING))
         {
             moveToTarget();
         }
+    }
+
+    private bool CheckPositionIsFree(Vector3 nextPosition)
+    {
+        return !tilemap.HasTile(Vector3Int.FloorToInt(nextPosition));
     }
 
     private Vector3 GetMoveValue()
