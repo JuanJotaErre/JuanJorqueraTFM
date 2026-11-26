@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,17 +15,30 @@ public class EnemyController : MonoBehaviour
     [SerializeField]
     float speed = 5f;
     [SerializeField]
+    float sightDistance = 5f;
+    [SerializeField]
     float minPause = .5f;
     [SerializeField]
     float maxPause = 1.5f;
     float pause;
-    Vector3 targetPosition;
+    [SerializeField]
+    PlayerController target;
+    
+    AStarPathFinding pathFinding;
+
+    List<Node> path;
+    Vector3Int lastPathCalculated;
+
+    Vector3 nextMovePosition;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         state = EnemyState.PATROL;
         actionState = ActionState.STANDING;
+        nextMovePosition = transform.position;
+
+        pathFinding = GetComponentInParent<AStarPathFinding>();
     }
 
     // Update is called once per frame
@@ -32,36 +47,46 @@ public class EnemyController : MonoBehaviour
         
         if(state.Equals(EnemyState.PATROL))
         {
-            patrol();
+            Patrol();
         }
-        else if(state.Equals(EnemyState.CHASE))
+        else if(state.Equals(EnemyState.CHASE) && target != null)
         {
-            chase();
+            CheckTargetDistanceAndChase();
         }
     }
 
-    private void patrol()
+    private void Patrol()
     {
         if(actionState.Equals(ActionState.STANDING))
         {
            actionState = ActionState.MOVING;
-           targetPosition = transform.position + getRandomDirection();
+           nextMovePosition = transform.position + GetRandomDirection();
         }
-        if(actionState.Equals(ActionState.PAUSE))
+        else if(actionState.Equals(ActionState.PAUSE))
         {
             pause = pause - Time.deltaTime;
             if(pause <= 0)
             {
                 actionState = ActionState.STANDING;
             }
+            CheckTarget();
         }
         else if(actionState.Equals(ActionState.MOVING))
         {
-            moveToTarget();
+            MoveToTarget();
         }
     }
 
-    private Vector3 getRandomDirection()
+    private void CheckTarget()
+    {
+        if(Vector3.Distance(target.lastValidPosition, transform.position) <= sightDistance)
+        {
+            state = EnemyState.CHASE;
+            actionState = ActionState.STANDING;
+        }
+    }
+
+    private Vector3 GetRandomDirection()
     {
         return UnityEngine.Random.Range(0, 4) switch
         {
@@ -73,20 +98,58 @@ public class EnemyController : MonoBehaviour
         };
     }
 
-    private void chase()
+    private void Chase()
     {
-        throw new NotImplementedException();
+
+        if(actionState.Equals(ActionState.STANDING))
+        {
+            if(lastPathCalculated == null ||  lastPathCalculated != target.lastValidPosition) 
+            {
+                CalculateNewPath();
+            }
+            if(path != null && path.Count > 0)
+            {
+                nextMovePosition = path.First().GetPosition();
+                path.RemoveAt(0);
+                actionState = ActionState.MOVING;
+            }
+        }
+        else if(actionState.Equals(ActionState.MOVING))
+        {
+            MoveToTarget();
+        }
     }
 
-    void moveToTarget()
+    private void CheckTargetDistanceAndChase()
+    {
+        if(Vector3.Distance(target.lastValidPosition, transform.position) > sightDistance)
+        {
+            state = EnemyState.PATROL;
+        } else
+        {
+            Chase();
+        }
+    }
+
+    private void CalculateNewPath()
+    {
+        print("new path");
+        path = pathFinding.GeneratePath(Vector3Int.FloorToInt(transform.position), Vector3Int.FloorToInt(target.lastValidPosition));
+        lastPathCalculated = target.lastValidPosition;
+    }
+
+    void MoveToTarget()
     {
         var currentPosition = transform.position;
 
-        transform.position = Vector3.MoveTowards(currentPosition, targetPosition, Time.deltaTime * speed);
-        if (currentPosition == targetPosition)
+        transform.position = Vector3.MoveTowards(currentPosition, nextMovePosition, Time.deltaTime * speed);
+        if (currentPosition == nextMovePosition && state == EnemyState.PATROL)
         {
             actionState = ActionState.PAUSE;
             pause = UnityEngine.Random.Range(minPause, maxPause);
+        } else if (currentPosition == nextMovePosition)
+        {
+            actionState = ActionState.STANDING;
         }
     }
 }

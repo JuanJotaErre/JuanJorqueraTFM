@@ -11,20 +11,26 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     ActionState state;
 
-    [SerializeField]
-    float speed = 5f;
+    // [SerializeField]
+    // float speed = 5f;
     Vector3 targetPosition;
+
+    [SerializeField]
+    Movement movement;
 
     [SerializeField]
     Tilemap tilemap;
 
     bool lastMovementAxisX = false;
+
+    public Vector3Int lastValidPosition;
     
     void Start()
     {
         state = ActionState.STANDING;
         moveAction = InputSystem.actions.FindAction("Move");
         transform.position = new Vector3(0,0,0);
+        lastValidPosition = Vector3Int.FloorToInt(transform.position);
     }
 
     // Update is called once per frame
@@ -33,16 +39,16 @@ public class PlayerController : MonoBehaviour
         if(state.Equals(ActionState.STANDING) && moveAction.IsPressed())
         {
             var moveValue = GetMoveValue();
-            var nextPosition = transform.position + this.buildVector(moveValue);
-            if(CheckPositionIsFree(nextPosition))
-            {
-                targetPosition = nextPosition;
-                state = ActionState.MOVING;
+            if (moveValue.magnitude > 0) {
+                var moved = movement.Move(moveValue);
+                if(moved)
+                {
+                    state = ActionState.MOVING;
+                }
             }
-        }
-        else if(state.Equals(ActionState.MOVING))
+        } else if( state.Equals(ActionState.MOVING))
         {
-            moveToTarget();
+            movement.MoveToTarget();
         }
     }
 
@@ -63,11 +69,9 @@ public class PlayerController : MonoBehaviour
             if(lastMovementAxisX)
             {
                 vector.y = y;
-                // lastMovementAxisX = false;
             } else
             {
                 vector.x = x;
-                // lastMovementAxisX = true;
             }
         }
         else if(Math.Abs(x) > Math.Abs(y))
@@ -82,19 +86,10 @@ public class PlayerController : MonoBehaviour
         return vector.normalized;
     }
 
-    void moveToTarget()
+    public void OnStop()
     {
-        var currentPosition = transform.position;
+        state = ActionState.STANDING;
 
-        transform.position = Vector3.MoveTowards(currentPosition, targetPosition, Time.deltaTime * speed);
-        if (currentPosition == targetPosition)
-        {
-            state = ActionState.STANDING;
-        }
-    }
-
-    Vector3 buildVector(Vector2 vector)
-    {
-        return new Vector3(vector.x, vector.y, 0);
+        lastValidPosition = Vector3Int.FloorToInt(transform.position);
     }
 }

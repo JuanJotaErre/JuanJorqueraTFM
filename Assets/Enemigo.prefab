@@ -108,9 +108,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   state: 0
   actionState: 0
-  speed: 5
+  speed: 4
+  sightDistance: 5
   minPause: 0.5
   maxPause: 1.5
+  target: {fileID: 0}
 --- !u!1 &2363340285775733171
 GameObject:
   m_ObjectHideFlags: 0
