@@ -11,9 +11,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     ActionState state;
 
-    // [SerializeField]
-    // float speed = 5f;
-    Vector3 targetPosition;
+    [SerializeField]
+    int health = 10;
 
     [SerializeField]
     Movement movement;
@@ -24,13 +23,20 @@ public class PlayerController : MonoBehaviour
     bool lastMovementAxisX = false;
 
     public Vector3Int lastValidPosition;
-    
+
+    public Collider2D collider;
+
+    float lastDamage = 0;
+    float invicibilitySeconds = 1f;
+
+
     void Start()
     {
         state = ActionState.STANDING;
         moveAction = InputSystem.actions.FindAction("Move");
-        transform.position = new Vector3(0,0,0);
+        transform.position = new Vector3Int(0,0,0);
         lastValidPosition = Vector3Int.FloorToInt(transform.position);
+        
     }
 
     // Update is called once per frame
@@ -52,18 +58,14 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private bool CheckPositionIsFree(Vector3 nextPosition)
-    {
-        return !tilemap.HasTile(Vector3Int.FloorToInt(nextPosition));
-    }
 
-    private Vector3 GetMoveValue()
+    private Vector2Int GetMoveValue()
     {
         var rawValue = moveAction.ReadValue<Vector2>();
         
         var x = rawValue.x;
         var y = rawValue.y;
-        var vector = new Vector3();
+        var vector = new Vector2();
         if(Math.Abs(x) == Math.Abs(y))
         {
             if(lastMovementAxisX)
@@ -83,7 +85,7 @@ public class PlayerController : MonoBehaviour
             vector.y = y;
             lastMovementAxisX = false;
         }
-        return vector.normalized;
+        return Vector2Int.FloorToInt(vector.normalized);
     }
 
     public void OnStop()
@@ -91,5 +93,27 @@ public class PlayerController : MonoBehaviour
         state = ActionState.STANDING;
 
         lastValidPosition = Vector3Int.FloorToInt(transform.position);
+    }
+
+
+    public void OnDamage(int strength, GameObject collider)
+    {
+        if(Time.time - lastDamage > invicibilitySeconds)
+        {
+            health -= strength;
+            lastDamage = Time.time;
+            Push(collider);
+        }
+    }
+
+    private void Push(GameObject collider)
+    {
+        var direction = Vector3Int.FloorToInt((transform.position - collider.transform.position).normalized);
+        if(direction.magnitude < 1)
+        {
+            direction = VectorUtil.GetRandomDirection();
+        }
+        movement.PushTowards(direction);
+        state = ActionState.MOVING;
     }
 }

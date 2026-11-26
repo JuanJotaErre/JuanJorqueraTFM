@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering.Universal.Internal;
 
 public class EnemyController : MonoBehaviour
 {
@@ -14,6 +15,8 @@ public class EnemyController : MonoBehaviour
     ActionState actionState;
     [SerializeField]
     float speed = 5f;
+    [SerializeField]
+    int strength = 1;
     [SerializeField]
     float sightDistance = 5f;
     [SerializeField]
@@ -29,14 +32,14 @@ public class EnemyController : MonoBehaviour
     List<Node> path;
     Vector3Int lastPathCalculated;
 
-    Vector3 nextMovePosition;
+    Vector3Int nextMovePosition;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         state = EnemyState.PATROL;
         actionState = ActionState.STANDING;
-        nextMovePosition = transform.position;
+        nextMovePosition = Vector3Int.FloorToInt(transform.position);
 
         pathFinding = GetComponentInParent<AStarPathFinding>();
     }
@@ -60,7 +63,7 @@ public class EnemyController : MonoBehaviour
         if(actionState.Equals(ActionState.STANDING))
         {
            actionState = ActionState.MOVING;
-           nextMovePosition = transform.position + GetRandomDirection();
+           nextMovePosition = Vector3Int.FloorToInt(transform.position + VectorUtil.GetRandomDirection());
         }
         else if(actionState.Equals(ActionState.PAUSE))
         {
@@ -84,18 +87,6 @@ public class EnemyController : MonoBehaviour
             state = EnemyState.CHASE;
             actionState = ActionState.STANDING;
         }
-    }
-
-    private Vector3 GetRandomDirection()
-    {
-        return UnityEngine.Random.Range(0, 4) switch
-        {
-            0 =>  Vector3.up,
-            1 =>  Vector3.right,
-            2 =>  Vector3.down,
-            3 =>  Vector3.left,
-            _=> new Vector3(0,0,0)
-        };
     }
 
     private void Chase()
@@ -133,7 +124,6 @@ public class EnemyController : MonoBehaviour
 
     private void CalculateNewPath()
     {
-        print("new path");
         path = pathFinding.GeneratePath(Vector3Int.FloorToInt(transform.position), Vector3Int.FloorToInt(target.lastValidPosition));
         lastPathCalculated = target.lastValidPosition;
     }
@@ -150,6 +140,27 @@ public class EnemyController : MonoBehaviour
         } else if (currentPosition == nextMovePosition)
         {
             actionState = ActionState.STANDING;
+        }
+    }
+
+
+
+    void OnTriggerEnter2D(Collider2D collider)
+    {
+        Collide(collider);
+    }
+
+    void OnTriggerStay2D(Collider2D collider)
+    {
+        print("colliding");
+        Collide(collider);
+    }
+
+    void Collide(Collider2D collider)
+    {
+        if(collider.CompareTag("Player"))
+        {
+            collider.GetComponent<PlayerController>().OnDamage(strength, gameObject);
         }
     }
 }
