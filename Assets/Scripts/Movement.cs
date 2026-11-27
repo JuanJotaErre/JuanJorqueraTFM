@@ -7,7 +7,7 @@ public class Movement : MonoBehaviour
 {
 
     [SerializeField]
-    readonly float speed = 5f;
+    float speed = 5f;
     float actualSpeed = 5f;
     [SerializeField]
     int pushForce = 2;
@@ -20,12 +20,17 @@ public class Movement : MonoBehaviour
     UnityEvent stop;
 
 
-    
+    void Start()
+    {
+        actualSpeed = speed;
+    }
+
+
 
     public bool Move(Vector2Int movement)
     {
 
-        var nextPosition = Vector3Int.FloorToInt(transform.position + this.BuildVector(movement));
+        var nextPosition = Vector3Int.FloorToInt(transform.position + BuildVector(movement));
         var free = CheckPositionIsFree(nextPosition);
         if(free)
         {
@@ -103,5 +108,14 @@ public class Movement : MonoBehaviour
 
         targetPosition = destination;
         actualSpeed = speed * 3;
+    }
+
+    public bool MoveTo(Vector3Int destination)
+    {
+        if (!CheckPositionIsFree(destination))
+            return false;
+
+        targetPosition = destination;
+        return true;
     }
 }

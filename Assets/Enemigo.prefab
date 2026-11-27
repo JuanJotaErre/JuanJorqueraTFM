@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8142205717328742573}
   - component: {fileID: 8228325741501800822}
   - component: {fileID: 1293709614429393209}
+  - component: {fileID: 6236816724995378558}
+  - component: {fileID: 5795398929861451640}
   - component: {fileID: 8694956211828601775}
   m_Layer: 0
   m_Name: Enemigo
@@ -109,12 +111,54 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   state: 0
   actionState: 0
-  speed: 4
   strength: 1
   sightDistance: 5
   minPause: 0.5
   maxPause: 1.5
   target: {fileID: 0}
+--- !u!114 &6236816724995378558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1018412366756838185}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a8778d6896fc9aa881099ac83c14c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HealthController
+  health: 3
+--- !u!114 &5795398929861451640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1018412366756838185}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dfef38c32e0abe72b2878aeac3bc8c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Movement
+  speed: 4
+  pushForce: 2
+  tilemap: {fileID: 0}
+  stop:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1293709614429393209}
+        m_TargetAssemblyTypeName: EnemyController, Assembly-CSharp
+        m_MethodName: OnStop
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!61 &8694956211828601775
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -159,7 +203,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.87044835, y: 0.87044835}
   m_EdgeRadius: 0
 --- !u!1 &2363340285775733171
 GameObject:

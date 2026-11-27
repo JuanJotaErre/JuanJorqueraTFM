@@ -24,7 +24,7 @@ public class HealItem : MonoBehaviour
     {
         if(collider.CompareTag("Player"))
         {
-            collider.GetComponent<PlayerController>().Heal(healStrength);
+            collider.GetComponent<HealthController>().Heal(healStrength);
             Destroy(gameObject);
         }
     }

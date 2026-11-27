@@ -14,8 +14,6 @@ public class EnemyController : MonoBehaviour
     [SerializeField]
     ActionState actionState;
     [SerializeField]
-    float speed = 5f;
-    [SerializeField]
     int strength = 1;
     [SerializeField]
     float sightDistance = 5f;
@@ -32,22 +30,23 @@ public class EnemyController : MonoBehaviour
     List<Node> path;
     Vector3Int lastPathCalculated;
 
-    Vector3Int nextMovePosition;
+    Movement movement;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         state = EnemyState.PATROL;
         actionState = ActionState.STANDING;
-        nextMovePosition = Vector3Int.FloorToInt(transform.position);
 
         pathFinding = GetComponentInParent<AStarPathFinding>();
+        movement = GetComponent<Movement>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if(state.Equals(EnemyState.PATROL))
+            CheckTarget();
         if(state.Equals(EnemyState.PATROL))
         {
             Patrol();
@@ -56,14 +55,18 @@ public class EnemyController : MonoBehaviour
         {
             CheckTargetDistanceAndChase();
         }
+
+        if(actionState.Equals(ActionState.MOVING))
+            movement.MoveToTarget();
     }
 
     private void Patrol()
     {
         if(actionState.Equals(ActionState.STANDING))
         {
-           actionState = ActionState.MOVING;
-           nextMovePosition = Vector3Int.FloorToInt(transform.position + VectorUtil.GetRandomDirection());
+            var moved = movement.Move(VectorUtil.GetRandomDirection2D());
+            if(moved) 
+                actionState = ActionState.MOVING;
         }
         else if(actionState.Equals(ActionState.PAUSE))
         {
@@ -72,11 +75,6 @@ public class EnemyController : MonoBehaviour
             {
                 actionState = ActionState.STANDING;
             }
-            CheckTarget();
-        }
-        else if(actionState.Equals(ActionState.MOVING))
-        {
-            MoveToTarget();
         }
     }
 
@@ -94,20 +92,21 @@ public class EnemyController : MonoBehaviour
 
         if(actionState.Equals(ActionState.STANDING))
         {
-            if(lastPathCalculated == null ||  lastPathCalculated != target.lastValidPosition) 
+            if(lastPathCalculated != target.lastValidPosition) 
             {
                 CalculateNewPath();
             }
             if(path != null && path.Count > 0)
             {
-                nextMovePosition = path.First().GetPosition();
-                path.RemoveAt(0);
-                actionState = ActionState.MOVING;
+                var moved = movement.MoveTo(path.First().GetPosition());
+                if(moved) {
+                    path.RemoveAt(0);
+                    actionState = ActionState.MOVING;
+                } else
+                {
+                    path.RemoveAll(n => true);
+                }
             }
-        }
-        else if(actionState.Equals(ActionState.MOVING))
-        {
-            MoveToTarget();
         }
     }
 
@@ -128,19 +127,18 @@ public class EnemyController : MonoBehaviour
         lastPathCalculated = target.lastValidPosition;
     }
 
-    void MoveToTarget()
-    {
-        var currentPosition = transform.position;
 
-        transform.position = Vector3.MoveTowards(currentPosition, nextMovePosition, Time.deltaTime * speed);
-        if (currentPosition == nextMovePosition && state == EnemyState.PATROL)
+    public void OnStop()
+    {
+        if (state == EnemyState.PATROL)
         {
             actionState = ActionState.PAUSE;
             pause = UnityEngine.Random.Range(minPause, maxPause);
-        } else if (currentPosition == nextMovePosition)
+        } else
         {
-            actionState = ActionState.STANDING;
+            actionState = ActionState.STANDING;            
         }
+
     }
 
 
@@ -160,7 +158,8 @@ public class EnemyController : MonoBehaviour
     {
         if(collider.CompareTag("Player"))
         {
-            collider.GetComponent<PlayerController>().OnDamage(strength, gameObject);
+            collider.GetComponent<HealthController>().Damage(strength, gameObject);
+            collider.GetComponent<PlayerController>().Push(gameObject);
         }
     }
 }

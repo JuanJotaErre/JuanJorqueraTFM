@@ -20,4 +20,16 @@ public static class VectorUtil
         };
     }
 
+    public static Vector2Int GetRandomDirection2D()
+    {
+        return Random.Range(0, 4) switch
+        {
+            0 =>  Vector2Int.up,
+            1 =>  Vector2Int.right,
+            2 =>  Vector2Int.down,
+            3 =>  Vector2Int.left,
+            _=> new Vector2Int(0,0)
+        };
+    }
+
 }
