@@ -116,4 +116,9 @@ public class PlayerController : MonoBehaviour
         movement.PushTowards(direction);
         state = ActionState.MOVING;
     }
+
+    internal void Heal(int healStrength)
+    {
+        health += healStrength;
+    }
 }
